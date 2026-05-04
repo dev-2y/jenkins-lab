@@ -12,13 +12,13 @@ pipeline {
         stage('Teste') {
             steps {
                 echo 'Executando testes básicos...'
-                sh 'docker run --rm lab-app:${env.BUILD_NUMBER} python --version'
+                sh "docker run --rm lab-app:${env.BUILD_NUMBER} python --version"
             }
         }
         stage('Deploy') {
             steps {
                 echo 'Simulando deploy...'
-                sh 'docker run --rm lab-app:${env.BUILD_NUMBER}'
+                sh "docker run --rm lab-app:${env.BUILD_NUMBER}"
             }
         }
     }
