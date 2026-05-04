@@ -1,40 +1,25 @@
 pipeline {
     agent any
     stages {
-        stage('Lint') {
-            steps {
-                echo 'Executando lint...'
-                sh 'echo "Código passou no lint ✓"'
-            }
-        }
         stage('Build') {
             steps {
-                echo 'Construindo aplicação...'
-                sh 'echo "Build concluído ✓"'
+                script {
+                    echo 'Construindo a imagem da aplicação...'
+                    dockerImage = docker.build("lab-app:${env.BUILD_NUMBER}")
+                }
             }
         }
-        stage('Test') {
+        stage('Teste') {
             steps {
-                echo 'Rodando testes...'
-                sh '''
-                echo "Teste 1: OK"
-                echo "Teste 2: OK" 
-                echo "Todos testes passaram ✓"
-                '''
+                echo 'Executando testes básicos...'
+                sh 'docker run --rm lab-app:${env.BUILD_NUMBER} python --version'
             }
         }
-        stage('Package') {
+        stage('Deploy') {
             steps {
-                echo 'Gerando artefato...'
-                sh 'echo "build-$(date +%Y%m%d-%H%M%S).tar.gz" > artefato.txt'
-                archiveArtifacts 'artefato.txt'
+                echo 'Simulando deploy...'
+                sh 'docker run --rm lab-app:${env.BUILD_NUMBER}'
             }
-        }
-    }
-    post {
-        always {
-            echo 'Pipeline finalizado!'
         }
     }
 }
-
