@@ -5,7 +5,7 @@ pipeline {
             steps {
                 script {
                     echo 'Construindo a imagem da aplicação...'
-                    dockerImage = docker.build("lab-app:${env.BUILD_NUMBER}")
+                     def dockerImage = docker.build("lab-app:${env.BUILD_NUMBER}")
                 }
             }
         }
