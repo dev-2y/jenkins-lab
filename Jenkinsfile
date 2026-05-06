@@ -1,25 +1,55 @@
 pipeline {
     agent any
+
+    options {
+        timestamps()
+        timeout(time: 20, unit: 'MINUTES')
+    }
+
+    environment {
+        COMPOSE_PROJECT_NAME = "jenkins-${BUILD_NUMBER}"
+    }
+
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Build') {
             steps {
-                script {
-                    echo 'Construindo a imagem da aplicação...'
-                     def dockerImage = docker.build("lab-app:${env.BUILD_NUMBER}")
-                }
+                echo 'Build da imagem com Docker Compose...'
+                sh 'docker compose build'
             }
         }
-        stage('Teste') {
+
+        stage('Start Services') {
             steps {
-                echo 'Executando testes básicos...'
-                sh "docker run --rm lab-app:${env.BUILD_NUMBER} python --version"
+                echo 'Subindo os serviços...'
+                sh 'docker compose up -d'
             }
         }
-        stage('Deploy') {
+
+        stage('Smoke Test') {
             steps {
-                echo 'Simulando deploy...'
-                sh "docker run --rm lab-app:${env.BUILD_NUMBER}"
+                echo 'Validando a aplicação...'
+                sh 'curl -fsS http://localhost:5000/'
             }
+        }
+
+        stage('Logs') {
+            steps {
+                echo 'Coletando logs do serviço...'
+                sh 'docker compose logs --no-color'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Removendo os serviços...'
+            sh 'docker compose down -v || true'
         }
     }
 }
