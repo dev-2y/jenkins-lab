@@ -3,7 +3,7 @@ pipeline {
 
     options {
         timestamps()
-        timeout(time: 20, unit: 'MINUTES')
+        timeout(time: 25, unit: 'MINUTES')
     }
 
     environment {
@@ -19,29 +19,36 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Build da imagem com Docker Compose...'
+                echo 'Build dos serviços...'
                 sh 'docker compose build'
             }
         }
 
         stage('Start Services') {
             steps {
-                echo 'Subindo os serviços...'
+                echo 'Subindo banco e app...'
                 sh 'docker compose up -d'
             }
         }
 
-        stage('Smoke Test') {
+        stage('Wait DB') {
             steps {
-                echo 'Validando a aplicação...'
-		sh 'docker compose up -d --wait'
+                echo 'Aguardando o PostgreSQL ficar pronto...'
+                sh 'docker compose ps'
+                sh 'docker compose exec -T db pg_isready -U app_user -d app_db'
+            }
+        }
+
+        stage('Integration Test') {
+            steps {
+                echo 'Testando app + banco na rede do Compose...'
                 sh 'docker run --rm --network ${COMPOSE_PROJECT_NAME}_default curlimages/curl:8.10.1 curl -fsS http://app:5000/'
             }
         }
 
         stage('Logs') {
             steps {
-                echo 'Coletando logs do serviço...'
+                echo 'Coletando logs...'
                 sh 'docker compose logs --no-color'
             }
         }
@@ -49,7 +56,7 @@ pipeline {
 
     post {
         always {
-            echo 'Removendo os serviços...'
+            echo 'Limpando ambiente...'
             sh 'docker compose down -v || true'
         }
     }

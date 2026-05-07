@@ -1,7 +1,30 @@
 services:
+  db:
+    image: postgres:16
+    container_name: jenkins-lab-db
+    environment:
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_password
+      POSTGRES_DB: app_db
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_user -d app_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   app:
     build: .
     container_name: jenkins-lab-app
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: app_db
+      DB_USER: app_user
+      DB_PASSWORD: app_password
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "5000:5000"
-
