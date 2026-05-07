@@ -34,7 +34,9 @@ pipeline {
         stage('Smoke Test') {
             steps {
                 echo 'Validando a aplicação...'
-                sh 'curl -fsS http://localhost:5000/'
+		sh 'docker compose up -d --wait || docker compose up -d'
+        	sh 'docker compose ps'
+                sh 'curl -fsS http://app:5000/'
             }
         }
 
