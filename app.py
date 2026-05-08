@@ -20,3 +20,8 @@ def home():
             cur.execute("SELECT 1")
             value = cur.fetchone()[0]
     return {"status": "ok", "db": value}
+
+if __name__ == "__main__":
+    print("Iniciando aplicação Flask na porta 5000...", flush=True)
+    app.run(host="0.0.0.0", port=5000)
+
