@@ -38,23 +38,27 @@ pipeline {
             }
         }
 
-        stage('Integration Test') {
+        stage('Check App') {
             steps {
-                echo 'Testando a aplicação por dentro do container da app...'
-                sh 'docker compose exec -T app python -c "import urllib.request; print(urllib.request.urlopen(\'http://127.0.0.1:5000/\').read().decode())"'
+                echo 'Verificando status da aplicação...'
+                sh 'docker compose ps'
+                sh 'docker compose logs --no-color app || true'
+                sh 'docker compose ps app'
             }
         }
 
-        stage('Logs') {
+        stage('Integration Test') {
             steps {
-                echo 'Coletando logs...'
-                sh 'docker compose logs --no-color'
+                echo 'Executando teste apenas se a app estiver rodando...'
+                sh 'docker compose exec -T app python -c "import urllib.request; print(urllib.request.urlopen(\'http://127.0.0.1:5000/\').read().decode())"'
             }
         }
     }
 
     post {
         always {
+            echo 'Logs finais dos serviços...'
+            sh 'docker compose logs --no-color || true'
             echo 'Limpando ambiente...'
             sh 'docker compose down -v || true'
         }
